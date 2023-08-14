@@ -1,38 +1,38 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable react/no-unescaped-entities */
 import regeneratorRuntime from "regenerator-runtime";
-import SpeechRecognition, {
-  useSpeechRecognition,
-} from "react-speech-recognition";
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 
 const SpeechRecognitionComponent = () => {
-  const { transcript, resetTranscript } = useSpeechRecognition();
   const [isListening, setIsListening] = useState(false);
-  const transcriptRef = useRef("");
-  const microphoneRef = useRef(null);
-  const[responseData,setResponseData] = useState("")
+  const [responseData, setResponseData] = useState("");
+  const [transcript, setTranscript] = useState(""); // Updated state for transcript
 
   const handleListening = () => {
     setIsListening(true);
-    SpeechRecognition.startListening({
-      continuous: true,
-    });
+    const recognition = new window.webkitSpeechRecognition(); // Using the Web Speech API
+    recognition.lang = "en-US";
+
+    recognition.onresult = (event) => {
+      const speechResult = event.results[0][0].transcript;
+      setTranscript(speechResult);
+    };
+
+    recognition.start();
   };
 
   useEffect(() => {
-    if (transcript !== "" && transcript !== transcriptRef.current) {
+    if (transcript !== "") {
       console.log(transcript);
-      transcriptRef.current = transcript;
 
+      // Send transcript to the server for processing
       const formData = new FormData();
       formData.append("data", transcript);
-
       axios
         .post("/recognize_and_speak/", formData)
         .then((response) => {
-          setResponseData(response.message)
+          setResponseData(response.data.message);
           console.log(response);
         })
         .catch((error) => {
@@ -43,17 +43,12 @@ const SpeechRecognitionComponent = () => {
 
   const stopHandle = () => {
     setIsListening(false);
-    SpeechRecognition.stopListening();
-    transcriptRef.current = "";
-
-    resetTranscript();
   };
 
-  return !SpeechRecognition.browserSupportsSpeechRecognition() ? (
-    <div>Browser does not support Speech Recognition.</div>
-  ) : (
+  return (
     <>
-      <div ref={microphoneRef} onClick={handleListening}>
+      <div onClick={handleListening}>
+        {/* Your microphone SVG code */}
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
@@ -67,8 +62,9 @@ const SpeechRecognitionComponent = () => {
             strokeLinejoin="round"
             d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z"
           />
-        </svg>
+          </svg>
       </div>
+      {/* Other UI elements */}
       <div className="max-w-sm flex items-center justify-center flex-col  text-2xl font-beba text-black space-y-5">
         <p className="text-center  col-span-2 w-full">
           {isListening ? "Listening........." : "Ask Elena"}
@@ -82,7 +78,6 @@ const SpeechRecognitionComponent = () => {
           Stop
         </button>
       </div>
-
       <div>{responseData}</div>
     </>
   );

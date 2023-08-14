@@ -29,7 +29,7 @@ def ai(prompt):
             speaker.Voice = voice  # Set the selected voice
             break
     openai.api_key = "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"
-    chatStr = f"You Said:{prompt}\n Elena:"
+    chatStr = prompt
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=[
@@ -59,10 +59,10 @@ def ai(prompt):
 
 @csrf_exempt
 def recognize_and_speak(request):
-    data = json.loads(request.body.decode('utf-8'))
-    text = data.get('data', '')
-
-    # text = request.POST.get("data")
+    # data = json.loads(request.body.decode('utf-8'))
+    # text = data.get('data', '')
+    text = request.POST.get("data")
+    # print(text)
 
     try:
 
