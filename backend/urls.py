@@ -7,7 +7,8 @@ urlpatterns = [
 
 
     path('recognize_and_speak/', views.recognize_and_speak,
-         name='recognize_and_speak'),
+         name='recognize_and_speak'), path('stopAi/', views.stopAi,
+                                           name='stopAi'),
 
     path("", TemplateView.as_view(template_name="base.html")),
 ]

@@ -14,7 +14,9 @@ import openai
 
 # write a program to use open ai chat
 
-chatStr =""
+chatStr = ""
+
+
 def ai(prompt):
 
     pythoncom.CoInitialize()
@@ -49,12 +51,17 @@ def ai(prompt):
 
     res = response["choices"][0]["message"]["content"]
 
-    # if not os.path.exists("Openai"):
-    #     os.mkdir("Openai")
-    # with open(f"Openai/{''.join(prompt.split('elena')[1:]).strip()}.txt", "w") as f:
-    #     f.write(res)
+    if not os.path.exists("Openai"):
+        os.mkdir("Openai")
+    with open(f"Openai/{''.join(prompt.split('elena')[1:]).strip()}.txt", "w") as f:
+        f.write(res)
 
     return JsonResponse({'success': True, 'message': res})
+
+@csrf_exempt
+def stopAi(request):
+    pythoncom.CoUninitialize()
+    return JsonResponse({'success': True, 'message': "Stopped Elena"})
 
 
 @csrf_exempt
@@ -103,6 +110,28 @@ def recognize_and_speak(request):
                 speaker.Speak(speech_text)
                 webbrowser.open(site[1])
                 return JsonResponse({'success': True, 'message': 'Opening YouTube.'})
+            applications = {
+                "vscode": "code",
+                "notepad": "notepad.exe",
+                "cmd": "cmd.exe",
+                "command prompt": "cmd.exe",
+                "powershell": "powershell.exe"
+            }
+        for app_name, app_path in applications.items():
+            if f"open {app_name}".lower() in text.lower():
+                os.startfile(app_path)
+                speaker.Speak(f"Opening {app_name.capitalize()}")
+                return JsonResponse({'success': True, 'message': f'Opening {app_name.capitalize()}.'})
+        folders = {
+            "documents": "C:\\Users\\jayam\\Desktop\\Documents",
+            "desktop": "C:\\Users\\jayam\\Desktop",
+            "pictures": "C:\\Users\\jayam\\Desktop\\Pictures",
+        }
+        for folder_name, folder_path in folders.items():
+            if f"open {folder_name}".lower() in text.lower():
+                os.startfile(folder_path)
+                speaker.Speak(f"Opening {folder_name.capitalize()} folder")
+                return JsonResponse({'success': True, 'message': f'Opening {folder_name.capitalize()} folder.'})
         # Playing Music
         if "play music" in text.lower():
             speaker.Speak("Playing Music")
@@ -115,39 +144,14 @@ def recognize_and_speak(request):
             speaker.Speak(f"Sir , Time is {time}")
 
             return JsonResponse({'success': True, 'message': 'Speech synthesized successfully.'})
-        elif "Elena Quit".lower() in text.lower():
+        elif "Elena close".lower() in text.lower():
             exit()
 
-        elif "reset chat".lower() in text.lower():
-            chatStr = ""
         else:
             res = ai(prompt=text)
             return res
 
-        applications = {
-            "vscode": "code",
-            "notepad": "notepad.exe",
-            "cmd": "cmd.exe",
-            "command prompt": "cmd.exe",
-            "powershell": "powershell.exe"
-        }
-        for app_name, app_path in applications.items():
-            if f"open {app_name}" in text.lower():
-                os.startfile(app_path)
-                speaker.Speak(f"Opening {app_name.capitalize()}")
-                return JsonResponse({'success': True, 'message': f'Opening {app_name.capitalize()}.'})
-        folders = {
-            "documents": "C:\\Users\\jayam\\Desktop\\Documents",
-            "desktop": "C:\\Users\\jayam\\Desktop",
-            "pictures": "C:\\Users\\jayam\\Desktop\\Pictures",
-        }
-
         # Iterate through the folders dictionary and check for matching voice command
-        for folder_name, folder_path in folders.items():
-            if f"open {folder_name}" in text.lower():
-                os.startfile(folder_path)
-                speaker.Speak(f"Opening {folder_name.capitalize()} folder")
-                return JsonResponse({'success': True, 'message': f'Opening {folder_name.capitalize()} folder.'})
 
     finally:
         # Uninitialize the COM environment
